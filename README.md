@@ -1,8 +1,8 @@
-# Post Editor 📝
+# Draftbook 📝
 
-A small, dependency-free, client-side scratchpad for writing social posts and saving selected drafts for later.
+A small, dependency-free, local-first notebook for writing and saving selected drafts in your browser.
 
-**[Live Demo](https://inchigor.github.io/post-editor/)**
+**[Live Demo](https://inchigor.github.io/draftbook/)**
 
 ## Features
 

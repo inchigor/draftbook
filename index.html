@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <meta name="description" content="A private, client-side scratchpad for writing social posts and saving drafts locally in your browser.">
-  <title>Post Editor</title>
+  <meta name="description" content="A private, local-first drafts notebook that keeps your writing in the browser.">
+  <title>Draftbook</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext y='50' font-size='48'%3E%F0%9F%93%9D%3C/text%3E%3C/svg%3E">
   <style>
     :root {
@@ -234,8 +234,8 @@
     <section class="hero">
       <div>
         <span class="eyebrow" data-i18n="eyebrow">🔒 Saved locally • nothing leaves your browser</span>
-        <h1 data-i18n="heading">Post Editor</h1>
-        <p data-i18n="intro">A simple browser scratchpad for writing posts now and saving selected drafts for later.</p>
+        <h1 data-i18n="heading">Draftbook</h1>
+        <p data-i18n="intro">A simple browser notebook for writing now and saving selected drafts for later.</p>
         <div class="meta">
           <span class="pill" data-i18n="pillAutosave">💾 Current text autosaves locally</span>
           <span class="pill" data-i18n="pillDrafts">🗂 Save selected drafts for later</span>
@@ -260,7 +260,7 @@
           </div>
         </div>
 
-        <textarea id="editor" placeholder="Write your post here..." data-i18n-placeholder="editorPlaceholder" aria-label="Post editor" data-i18n-aria-label="editorAria"></textarea>
+        <textarea id="editor" placeholder="Write your draft here..." data-i18n-placeholder="editorPlaceholder" aria-label="Draft editor" data-i18n-aria-label="editorAria"></textarea>
 
         <div class="editor-meta">
           <div id="stats" class="stats" aria-live="polite"></div>
@@ -320,11 +320,11 @@
 
     const i18n = {
       en: {
-        pageTitle: 'Post Editor',
-        metaDescription: 'A private, client-side scratchpad for writing social posts and saving drafts locally in your browser.',
+        pageTitle: 'Draftbook',
+        metaDescription: 'A private, local-first drafts notebook that keeps your writing in the browser.',
         eyebrow: '🔒 Saved locally • nothing leaves your browser',
-        heading: 'Post Editor',
-        intro: 'A simple browser scratchpad for writing posts now and saving selected drafts for later.',
+        heading: 'Draftbook',
+        intro: 'A simple browser notebook for writing now and saving selected drafts for later.',
         pillAutosave: '💾 Current text autosaves locally',
         pillDrafts: '🗂 Save selected drafts for later',
         pillPrivate: '🛡 No account, server, or upload',
@@ -332,8 +332,8 @@
         editorHeading: 'Scratchpad',
         editorSub: 'Write or paste text here',
         editorSubDraft: 'Editing a saved draft — your saved copy changes only when you save it again',
-        editorPlaceholder: 'Write your post here...',
-        editorAria: 'Post editor',
+        editorPlaceholder: 'Write your draft here...',
+        editorAria: 'Draft editor',
         saveLater: '💾 Save for later',
         updateLater: '💾 Update & save for later',
         copy: '📋 Copy',
@@ -367,10 +367,10 @@
         themeLight: 'Switch to light theme'
       },
       ru: {
-        pageTitle: 'Редактор постов',
-        metaDescription: 'Локальный браузерный блокнот для постов и черновиков, сохранённых на потом.',
+        pageTitle: 'Draftbook',
+        metaDescription: 'Локальный браузерный блокнот для черновиков, который хранит текст только на устройстве.',
         eyebrow: '🔒 Сохраняется локально • текст никуда не отправляется',
-        heading: 'Редактор постов',
+        heading: 'Draftbook',
         intro: 'Простой блокнот в браузере: пишите сейчас, а нужные тексты сохраняйте в черновики на потом.',
         pillAutosave: '💾 Текущий текст сохраняется автоматически',
         pillDrafts: '🗂 Нужное можно сохранить на потом',
@@ -379,8 +379,8 @@
         editorHeading: 'Блокнот',
         editorSub: 'Напишите или вставьте текст',
         editorSubDraft: 'Открыт сохранённый черновик — сохранённая копия изменится только после повторного сохранения',
-        editorPlaceholder: 'Напишите пост здесь...',
-        editorAria: 'Редактор поста',
+        editorPlaceholder: 'Напишите черновик здесь...',
+        editorAria: 'Редактор черновика',
         saveLater: '💾 Сохранить на потом',
         updateLater: '💾 Обновить и сохранить',
         copy: '📋 Скопировать',
