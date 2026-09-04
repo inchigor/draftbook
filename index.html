@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <meta name="description" content="A private, client-side post editor with autosave, emoji tools, and a clean preview for social posts.">
+  <meta name="description" content="A private, client-side scratchpad for writing social posts and saving drafts locally in your browser.">
   <title>Post Editor</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext y='50' font-size='48'%3E%F0%9F%93%9D%3C/text%3E%3C/svg%3E">
   <style>
@@ -21,10 +21,13 @@
       --primary-hover: #1d4ed8;
       --primary-text: #fff;
       --soft: rgba(255,255,255,.42);
+      --soft-hover: rgba(37,99,235,.06);
       --success: #15803d;
       --success-bg: #dcfce7;
       --warning: #9a6700;
       --warning-bg: #fff4ce;
+      --danger: #b42318;
+      --danger-bg: #fff1f0;
       --focus: rgba(37,99,235,.35);
     }
 
@@ -41,10 +44,13 @@
       --primary-hover: #3b82f6;
       --primary-text: #07111f;
       --soft: rgba(255,255,255,.06);
+      --soft-hover: rgba(96,165,250,.1);
       --success: #86efac;
       --success-bg: rgba(34,197,94,.14);
       --warning: #fde68a;
       --warning-bg: rgba(234,179,8,.14);
+      --danger: #fda4af;
+      --danger-bg: rgba(244,63,94,.12);
       --focus: rgba(96,165,250,.38);
     }
 
@@ -62,9 +68,9 @@
     }
 
     .wrapper {
-      max-width: 1100px;
+      width: min(1500px, calc(100% - 32px));
       margin: 0 auto;
-      padding: 24px 16px 40px;
+      padding: 24px 0 40px;
     }
 
     .hero, .card {
@@ -79,12 +85,12 @@
       display: grid;
       grid-template-columns: 1fr auto;
       gap: 16px;
-      padding: 24px;
+      padding: 22px 24px;
       border-radius: 26px;
       margin-bottom: 18px;
     }
 
-    .eyebrow, .pill, .status, .stat {
+    .eyebrow, .pill, .status, .stat, .draft-count {
       display: inline-flex;
       align-items: center;
       gap: 8px;
@@ -95,10 +101,10 @@
       font-weight: 650;
     }
 
-    .eyebrow, .pill { border-radius: 999px; padding: 8px 12px; }
-    .hero h1 { margin: 8px 0 10px; font-size: clamp(30px,5vw,42px); line-height: 1.05; letter-spacing: -.03em; }
-    .hero p { margin: 0; color: var(--muted); max-width: 760px; }
-    .meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+    .eyebrow, .pill, .draft-count { border-radius: 999px; padding: 8px 12px; }
+    .hero h1 { margin: 8px 0 8px; font-size: clamp(30px,4vw,40px); line-height: 1.05; letter-spacing: -.03em; }
+    .hero p { margin: 0; color: var(--muted); max-width: 900px; }
+    .meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
 
     .header-controls { display: flex; gap: 8px; align-items: flex-start; }
     .language { display: flex; padding: 3px; border: 1px solid var(--line); border-radius: 14px; background: var(--soft); }
@@ -106,21 +112,20 @@
     .language button[aria-pressed="true"] { background: var(--card-strong); color: var(--text); box-shadow: 0 2px 8px rgba(15,23,42,.09); }
     .theme { min-width: 46px; height: 46px; padding: 0; border-radius: 14px; }
 
-    .grid { display: grid; grid-template-columns: 1.08fr .92fr; gap: 18px; }
-    .card { padding: 18px; border-radius: 22px; }
+    .card { padding: 20px; border-radius: 22px; }
     .head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
     .head h2 { margin: 0; font-size: 18px; }
     .sub { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
 
     textarea {
       width: 100%;
-      min-height: 310px;
-      padding: 15px;
+      min-height: clamp(430px, 56vh, 720px);
+      padding: 18px;
       border: 1px solid var(--line);
       border-radius: 16px;
       background: var(--card-strong);
       color: var(--text);
-      font: 15px/1.65 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font: 16px/1.65 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       resize: vertical;
     }
 
@@ -137,12 +142,14 @@
       font: inherit;
       font-weight: 650;
       cursor: pointer;
-      transition: background-color .18s ease, color .18s ease;
+      transition: background-color .18s ease, color .18s ease, border-color .18s ease;
     }
 
-    button:hover { background: var(--soft); }
+    button:hover { background: var(--soft-hover); }
     .primary { background: var(--primary); border-color: transparent; color: var(--primary-text); }
     .primary:hover { background: var(--primary-hover); }
+    .danger { color: var(--danger); }
+    .danger:hover { background: var(--danger-bg); }
 
     .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 14px; }
     .status { min-height: 40px; padding: 9px 12px; border-radius: 14px; }
@@ -150,45 +157,75 @@
     .status.warning { color: var(--warning); background: var(--warning-bg); }
     .status[hidden] { display: none; }
 
-    .stats { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .editor-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; align-items: center; margin-top: 12px; }
+    .stats { display: flex; flex-wrap: wrap; gap: 8px; }
     .stat { padding: 8px 11px; border-radius: 12px; }
     .stat strong { color: var(--text); }
+    .autosave { color: var(--muted); font-size: 13px; }
 
-    .preview {
-      min-height: 310px;
-      padding: 15px;
+    .drafts-card { margin-top: 18px; }
+    .draft-actions { display: flex; gap: 8px; align-items: center; }
+    .draft-list { display: grid; gap: 10px; }
+
+    .draft-row {
+      display: grid;
+      grid-template-columns: minmax(0,1fr) auto;
+      gap: 10px;
+      align-items: stretch;
       border: 1px solid var(--line);
       border-radius: 16px;
       background: var(--card-strong);
-      color: var(--text);
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-      font-size: 15px;
-      line-height: 1.65;
+      overflow: hidden;
     }
 
-    .preview.empty { color: var(--muted); }
+    .draft-row.active { border-color: var(--primary); }
+    .draft-open {
+      display: grid;
+      grid-template-columns: 170px minmax(0,1fr);
+      gap: 16px;
+      width: 100%;
+      padding: 14px 16px;
+      border: 0;
+      border-radius: 0;
+      text-align: left;
+      background: transparent;
+      font-weight: 400;
+    }
 
-    .emoji-card { margin-top: 18px; }
-    .emoji-card[hidden] { display: none; }
-    .emoji-groups { display: grid; gap: 14px; }
-    .emoji-group h3 { margin: 0 0 8px; color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
-    .emoji-list { display: flex; flex-wrap: wrap; gap: 7px; }
-    .emoji-button { min-width: 42px; min-height: 42px; padding: 6px 9px; font-size: 20px; line-height: 1; border-radius: 12px; background: var(--card-strong); }
+    .draft-open:hover { background: var(--soft-hover); }
+    .draft-time { color: var(--muted); font-size: 13px; white-space: nowrap; }
+    .draft-content { min-width: 0; }
+    .draft-title { color: var(--text); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .draft-excerpt { margin-top: 3px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .draft-delete { align-self: center; margin-right: 8px; padding: 9px 11px; }
 
+    .empty-drafts {
+      padding: 28px 18px;
+      border: 1px dashed var(--line);
+      border-radius: 16px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .storage-note { margin-top: 12px; color: var(--muted); font-size: 12px; }
     .footer-note { margin-top: 18px; color: var(--muted); font-size: 13px; text-align: center; }
 
-    @media (max-width: 900px) {
-      .hero, .grid { grid-template-columns: 1fr; }
-      .hero { padding: 18px; }
+    @media (max-width: 760px) {
+      .hero { grid-template-columns: 1fr; padding: 18px; }
       .header-controls { justify-content: flex-start; }
+      .draft-open { grid-template-columns: 1fr; gap: 4px; }
+      .draft-time { white-space: normal; }
     }
 
     @media (max-width: 560px) {
-      .wrapper { padding: 14px 12px 28px; }
+      .wrapper { width: calc(100% - 24px); padding: 14px 0 28px; }
       .card, .hero { border-radius: 18px; padding: 14px; }
+      textarea { min-height: 54vh; padding: 14px; }
       .toolbar button { flex: 1 1 calc(50% - 5px); }
-      textarea, .preview { min-height: 250px; }
+      .toolbar .primary { flex-basis: 100%; }
+      .editor-meta { align-items: flex-start; }
+      .draft-actions .danger { padding-inline: 10px; }
+      .draft-row { grid-template-columns: minmax(0,1fr) auto; }
     }
   </style>
 </head>
@@ -198,11 +235,11 @@
       <div>
         <span class="eyebrow" data-i18n="eyebrow">🔒 Saved locally • nothing leaves your browser</span>
         <h1 data-i18n="heading">Post Editor</h1>
-        <p data-i18n="intro">Draft social posts, insert emoji, convert common emoji shortcodes, and preview the result in one small local tool.</p>
+        <p data-i18n="intro">A simple browser scratchpad for writing posts now and saving selected drafts for later.</p>
         <div class="meta">
-          <span class="pill" data-i18n="pillAutosave">💾 Local autosave</span>
-          <span class="pill" data-i18n="pillEmoji">🙂 Emoji tools</span>
-          <span class="pill" data-i18n="pillPreview">👁 Live preview</span>
+          <span class="pill" data-i18n="pillAutosave">💾 Current text autosaves locally</span>
+          <span class="pill" data-i18n="pillDrafts">🗂 Save selected drafts for later</span>
+          <span class="pill" data-i18n="pillPrivate">🛡 No account, server, or upload</span>
         </div>
       </div>
       <div class="header-controls">
@@ -214,127 +251,229 @@
       </div>
     </section>
 
-    <div class="grid">
+    <main>
       <section class="card">
         <div class="head">
           <div>
-            <h2 data-i18n="editorHeading">Editor</h2>
-            <p class="sub" data-i18n="editorSub">Write or paste your post</p>
+            <h2 data-i18n="editorHeading">Scratchpad</h2>
+            <p class="sub" id="editorSub" data-i18n="editorSub">Write or paste text here</p>
           </div>
         </div>
 
         <textarea id="editor" placeholder="Write your post here..." data-i18n-placeholder="editorPlaceholder" aria-label="Post editor" data-i18n-aria-label="editorAria"></textarea>
 
-        <div id="stats" class="stats" aria-live="polite"></div>
+        <div class="editor-meta">
+          <div id="stats" class="stats" aria-live="polite"></div>
+          <span id="autosaveStatus" class="autosave" data-i18n="autosaved">Saved locally in this browser</span>
+        </div>
 
         <div class="toolbar">
-          <button id="copyButton" class="primary" type="button" data-i18n="copy">📋 Copy post</button>
-          <button id="clearButton" type="button" data-i18n="clear">🧹 Clear</button>
-          <button id="emojiToggle" type="button" aria-expanded="false" data-i18n="emojiToggle">🙂 Emoji</button>
-          <button id="convertButton" type="button" data-i18n="convert">🔁 Convert :emoji:</button>
+          <button id="saveButton" class="primary" type="button" data-i18n="saveLater">💾 Save for later</button>
+          <button id="copyButton" type="button" data-i18n="copy">📋 Copy</button>
+          <button id="newButton" type="button" data-i18n="newNote">＋ New</button>
           <span id="actionStatus" class="status success" role="status" aria-live="polite" hidden></span>
         </div>
       </section>
 
-      <section class="card">
+      <section class="card drafts-card">
         <div class="head">
           <div>
-            <h2 data-i18n="previewHeading">Preview</h2>
-            <p class="sub" data-i18n="previewSub">Plain-text preview of the final post</p>
+            <h2 data-i18n="draftsHeading">Saved drafts</h2>
+            <p class="sub" data-i18n="draftsSub">Open a saved draft whenever you want to return to it</p>
+          </div>
+          <div class="draft-actions">
+            <span id="draftCount" class="draft-count"></span>
+            <button id="deleteAllButton" class="danger" type="button" data-i18n="deleteAll">Delete all</button>
           </div>
         </div>
-        <div id="preview" class="preview empty" aria-live="polite"></div>
+
+        <div id="draftList" class="draft-list"></div>
+        <p class="storage-note" data-i18n="storageNote">Drafts live only in this browser. Clearing this site's browser data will remove them.</p>
       </section>
-    </div>
+    </main>
 
-    <section id="emojiPanel" class="card emoji-card" hidden>
-      <div class="head">
-        <div>
-          <h2 data-i18n="emojiHeading">Emoji palette</h2>
-          <p class="sub" data-i18n="emojiSub">Inserted at the current cursor position</p>
-        </div>
-      </div>
-      <div id="emojiGroups" class="emoji-groups"></div>
-    </section>
-
-    <p class="footer-note" data-i18n="footer">All content is stored only in this browser using localStorage.</p>
+    <p class="footer-note" data-i18n="footer">Private by design: all text stays in your browser using localStorage.</p>
   </div>
 
   <script>
     const editor = document.getElementById('editor');
-    const preview = document.getElementById('preview');
     const stats = document.getElementById('stats');
-    const emojiPanel = document.getElementById('emojiPanel');
-    const emojiGroups = document.getElementById('emojiGroups');
-    const emojiToggle = document.getElementById('emojiToggle');
+    const saveButton = document.getElementById('saveButton');
     const copyButton = document.getElementById('copyButton');
-    const clearButton = document.getElementById('clearButton');
-    const convertButton = document.getElementById('convertButton');
+    const newButton = document.getElementById('newButton');
     const actionStatus = document.getElementById('actionStatus');
+    const autosaveStatus = document.getElementById('autosaveStatus');
+    const draftList = document.getElementById('draftList');
+    const draftCount = document.getElementById('draftCount');
+    const deleteAllButton = document.getElementById('deleteAllButton');
     const themeToggle = document.getElementById('themeToggle');
     const languageButtons = [...document.querySelectorAll('[data-language]')];
     const descriptionMeta = document.querySelector('meta[name="description"]');
 
     const STORAGE = {
-      content: 'postEditorContent',
+      scratch: 'postEditorContent',
+      drafts: 'postEditorDrafts',
+      activeDraft: 'postEditorActiveDraftId',
       language: 'postEditorLanguage',
-      theme: 'postEditorTheme',
-      emojiOpen: 'postEditorEmojiOpen'
+      theme: 'postEditorTheme'
     };
-
-    const emojiMap = {
-      ':bell:': '🔔', ':name_badge:': '📛', ':link:': '🔗', ':closed_lock_with_key:': '🔐',
-      ':white_check_mark:': '✅', ':new:': '🆕', ':fire:': '🔥', ':eyes:': '👀',
-      ':star:': '⭐', ':rocket:': '🚀', ':chart_with_upwards_trend:': '📈',
-      ':warning:': '⚠️', ':tada:': '🎉', ':moneybag:': '💰', ':thinking_face:': '🤔',
-      ':smile:': '😄', ':wave:': '👋'
-    };
-
-    const emojiCategories = [
-      { label: { en: 'Popular', ru: 'Популярные' }, emoji: ['🔥','🚀','✅','🎉','💰','📈','⭐','⚠️'] },
-      { label: { en: 'Reactions', ru: 'Реакции' }, emoji: ['😄','😎','🤔','👀','👋','😂','❤️','👍'] },
-      { label: { en: 'Web3 & Tech', ru: 'Web3 и технологии' }, emoji: ['⚡','🔐','🔗','📛','🧠','💻','🛡️','🔔'] },
-      { label: { en: 'Animals', ru: 'Животные' }, emoji: ['🐶','🐱','🦊','🐢','🐳','🐸','🐻','🦁'] },
-      { label: { en: 'Flags', ru: 'Флаги' }, emoji: ['🇷🇺','🇺🇸','🇪🇺','🇬🇧','🇩🇪','🇫🇷','🇯🇵','🇨🇳','🇺🇦'] }
-    ];
 
     const i18n = {
       en: {
         pageTitle: 'Post Editor',
-        metaDescription: 'A private, client-side post editor with autosave, emoji tools, and a clean preview for social posts.',
-        eyebrow: '🔒 Saved locally • nothing leaves your browser', heading: 'Post Editor',
-        intro: 'Draft social posts, insert emoji, convert common emoji shortcodes, and preview the result in one small local tool.',
-        pillAutosave: '💾 Local autosave', pillEmoji: '🙂 Emoji tools', pillPreview: '👁 Live preview',
-        languageLabel: 'Language', editorHeading: 'Editor', editorSub: 'Write or paste your post',
-        editorPlaceholder: 'Write your post here...', editorAria: 'Post editor', copy: '📋 Copy post', clear: '🧹 Clear',
-        emojiToggle: '🙂 Emoji', convert: '🔁 Convert :emoji:', previewHeading: 'Preview', previewSub: 'Plain-text preview of the final post',
-        emojiHeading: 'Emoji palette', emojiSub: 'Inserted at the current cursor position', footer: 'All content is stored only in this browser using localStorage.',
-        emptyPreview: 'Your post preview will appear here.', chars: 'Characters', words: 'Words', lines: 'Lines',
-        copied: 'Copied', converted: 'Emoji shortcodes converted', nothingToConvert: 'No known emoji shortcodes found',
-        clearConfirm: 'Clear the saved post?', themeDark: 'Switch to dark theme', themeLight: 'Switch to light theme', insertEmoji: 'Insert'
+        metaDescription: 'A private, client-side scratchpad for writing social posts and saving drafts locally in your browser.',
+        eyebrow: '🔒 Saved locally • nothing leaves your browser',
+        heading: 'Post Editor',
+        intro: 'A simple browser scratchpad for writing posts now and saving selected drafts for later.',
+        pillAutosave: '💾 Current text autosaves locally',
+        pillDrafts: '🗂 Save selected drafts for later',
+        pillPrivate: '🛡 No account, server, or upload',
+        languageLabel: 'Language',
+        editorHeading: 'Scratchpad',
+        editorSub: 'Write or paste text here',
+        editorSubDraft: 'Editing a saved draft — your saved copy changes only when you save it again',
+        editorPlaceholder: 'Write your post here...',
+        editorAria: 'Post editor',
+        saveLater: '💾 Save for later',
+        updateLater: '💾 Update & save for later',
+        copy: '📋 Copy',
+        newNote: '＋ New',
+        draftsHeading: 'Saved drafts',
+        draftsSub: 'Open a saved draft whenever you want to return to it',
+        deleteAll: 'Delete all',
+        storageNote: "Drafts live only in this browser. Clearing this site's browser data will remove them.",
+        footer: 'Private by design: all text stays in your browser using localStorage.',
+        autosaved: 'Saved locally in this browser',
+        chars: 'Characters',
+        words: 'Words',
+        lines: 'Lines',
+        draftsCount: n => `${n} draft${n === 1 ? '' : 's'}`,
+        noDrafts: 'No saved drafts yet. Use “Save for later” when you want to keep something.',
+        untitled: 'Untitled draft',
+        copied: 'Copied',
+        saved: 'Saved for later',
+        updated: 'Draft updated',
+        newStarted: 'New blank note',
+        newConfirm: 'Start a new note? Your current unsaved text will be discarded.',
+        nothingToSave: 'Nothing to save',
+        opened: 'Draft opened',
+        deleted: 'Draft deleted',
+        allDeleted: 'All drafts deleted',
+        openReplaceConfirm: 'Open this draft? Your current unsaved text will be replaced.',
+        deleteConfirm: 'Delete this saved draft?',
+        deleteAllConfirm: 'Delete all saved drafts?',
+        deleteDraftAria: 'Delete draft',
+        themeDark: 'Switch to dark theme',
+        themeLight: 'Switch to light theme'
       },
       ru: {
         pageTitle: 'Редактор постов',
-        metaDescription: 'Локальный редактор постов с автосохранением, эмодзи и предпросмотром прямо в браузере.',
-        eyebrow: '🔒 Сохраняется локально • текст никуда не отправляется', heading: 'Редактор постов',
-        intro: 'Готовьте посты, вставляйте эмодзи, преобразовывайте популярные :emoji:-коды и сразу смотрите результат.',
-        pillAutosave: '💾 Локальное автосохранение', pillEmoji: '🙂 Эмодзи', pillPreview: '👁 Предпросмотр',
-        languageLabel: 'Язык', editorHeading: 'Редактор', editorSub: 'Напишите или вставьте пост',
-        editorPlaceholder: 'Напишите пост здесь...', editorAria: 'Редактор поста', copy: '📋 Скопировать', clear: '🧹 Очистить',
-        emojiToggle: '🙂 Эмодзи', convert: '🔁 Преобразовать :emoji:', previewHeading: 'Предпросмотр', previewSub: 'Текстовый предпросмотр итогового поста',
-        emojiHeading: 'Панель эмодзи', emojiSub: 'Эмодзи вставится в текущую позицию курсора', footer: 'Весь текст хранится только в этом браузере через localStorage.',
-        emptyPreview: 'Здесь появится предпросмотр поста.', chars: 'Символы', words: 'Слова', lines: 'Строки',
-        copied: 'Скопировано', converted: 'Emoji-коды преобразованы', nothingToConvert: 'Знакомых emoji-кодов не найдено',
-        clearConfirm: 'Очистить сохранённый пост?', themeDark: 'Включить тёмную тему', themeLight: 'Включить светлую тему', insertEmoji: 'Вставить'
+        metaDescription: 'Локальный браузерный блокнот для постов и черновиков, сохранённых на потом.',
+        eyebrow: '🔒 Сохраняется локально • текст никуда не отправляется',
+        heading: 'Редактор постов',
+        intro: 'Простой блокнот в браузере: пишите сейчас, а нужные тексты сохраняйте в черновики на потом.',
+        pillAutosave: '💾 Текущий текст сохраняется автоматически',
+        pillDrafts: '🗂 Нужное можно сохранить на потом',
+        pillPrivate: '🛡 Без аккаунта, сервера и загрузок',
+        languageLabel: 'Язык',
+        editorHeading: 'Блокнот',
+        editorSub: 'Напишите или вставьте текст',
+        editorSubDraft: 'Открыт сохранённый черновик — сохранённая копия изменится только после повторного сохранения',
+        editorPlaceholder: 'Напишите пост здесь...',
+        editorAria: 'Редактор поста',
+        saveLater: '💾 Сохранить на потом',
+        updateLater: '💾 Обновить и сохранить',
+        copy: '📋 Скопировать',
+        newNote: '＋ Новый',
+        draftsHeading: 'Сохранённые черновики',
+        draftsSub: 'Откройте любой черновик, когда захотите к нему вернуться',
+        deleteAll: 'Удалить все',
+        storageNote: 'Черновики хранятся только в этом браузере. Очистка данных сайта удалит их.',
+        footer: 'Весь текст хранится только в этом браузере через localStorage.',
+        autosaved: 'Сохранено локально в этом браузере',
+        chars: 'Символы',
+        words: 'Слова',
+        lines: 'Строки',
+        draftsCount: n => `${n} ${pluralRu(n, 'черновик', 'черновика', 'черновиков')}`,
+        noDrafts: 'Сохранённых черновиков пока нет. Нажмите «Сохранить на потом», когда захотите оставить текст.',
+        untitled: 'Черновик без названия',
+        copied: 'Скопировано',
+        saved: 'Сохранено на потом',
+        updated: 'Черновик обновлён',
+        newStarted: 'Открыт новый пустой лист',
+        newConfirm: 'Открыть новый лист? Текущий несохранённый текст будет удалён.',
+        nothingToSave: 'Нечего сохранять',
+        opened: 'Черновик открыт',
+        deleted: 'Черновик удалён',
+        allDeleted: 'Все черновики удалены',
+        openReplaceConfirm: 'Открыть этот черновик? Текущий несохранённый текст будет заменён.',
+        deleteConfirm: 'Удалить этот сохранённый черновик?',
+        deleteAllConfirm: 'Удалить все сохранённые черновики?',
+        deleteDraftAria: 'Удалить черновик',
+        themeDark: 'Включить тёмную тему',
+        themeLight: 'Включить светлую тему'
       }
     };
 
     let currentLanguage = 'en';
+    let statusTimer = null;
 
-    function t(key) { return i18n[currentLanguage][key] || i18n.en[key] || key; }
-    function safeStorageGet(key) { try { return localStorage.getItem(key); } catch { return null; } }
-    function safeStorageSet(key, value) { try { localStorage.setItem(key, value); } catch {} }
-    function safeStorageRemove(key) { try { localStorage.removeItem(key); } catch {} }
+    function pluralRu(number, one, few, many) {
+      const n = Math.abs(number) % 100;
+      const n1 = n % 10;
+      if (n > 10 && n < 20) return many;
+      if (n1 > 1 && n1 < 5) return few;
+      if (n1 === 1) return one;
+      return many;
+    }
+
+    function t(key) {
+      const value = i18n[currentLanguage][key] ?? i18n.en[key] ?? key;
+      return value;
+    }
+
+    function safeStorageGet(key) {
+      try { return localStorage.getItem(key); } catch { return null; }
+    }
+
+    function safeStorageSet(key, value) {
+      try { localStorage.setItem(key, value); } catch {}
+    }
+
+    function safeStorageRemove(key) {
+      try { localStorage.removeItem(key); } catch {}
+    }
+
+    function loadDrafts() {
+      const raw = safeStorageGet(STORAGE.drafts);
+      if (!raw) return [];
+      try {
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return [];
+        return parsed.filter(item => item && typeof item.id === 'string' && typeof item.content === 'string');
+      } catch {
+        return [];
+      }
+    }
+
+    function saveDrafts(drafts) {
+      safeStorageSet(STORAGE.drafts, JSON.stringify(drafts));
+    }
+
+    function getActiveDraftId() {
+      return safeStorageGet(STORAGE.activeDraft);
+    }
+
+    function setActiveDraftId(id) {
+      if (id) safeStorageSet(STORAGE.activeDraft, id);
+      else safeStorageRemove(STORAGE.activeDraft);
+      updateEditorMode();
+    }
+
+    function makeDraftId() {
+      if (crypto?.randomUUID) return crypto.randomUUID();
+      return `draft-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    }
 
     function renderStats() {
       const text = editor.value;
@@ -353,25 +492,179 @@
       }
     }
 
-    function updatePreview() {
-      const text = editor.value;
-      preview.textContent = text || t('emptyPreview');
-      preview.classList.toggle('empty', !text);
-      renderStats();
+    function updateEditorMode() {
+      const active = getActiveDraftId();
+      const editorSub = document.getElementById('editorSub');
+      editorSub.textContent = active ? t('editorSubDraft') : t('editorSub');
+      saveButton.textContent = active ? t('updateLater') : t('saveLater');
     }
 
-    function saveEditor() { safeStorageSet(STORAGE.content, editor.value); }
+    function autosaveScratch() {
+      if (editor.value) safeStorageSet(STORAGE.scratch, editor.value);
+      else safeStorageRemove(STORAGE.scratch);
+      renderStats();
+      autosaveStatus.textContent = t('autosaved');
+    }
 
     function showStatus(message, kind = 'success') {
+      if (statusTimer) window.clearTimeout(statusTimer);
       actionStatus.hidden = false;
       actionStatus.className = `status ${kind}`;
       actionStatus.textContent = message;
-      window.setTimeout(() => {
-        if (actionStatus.textContent === message) {
-          actionStatus.hidden = true;
-          actionStatus.textContent = '';
-        }
+      statusTimer = window.setTimeout(() => {
+        actionStatus.hidden = true;
+        actionStatus.textContent = '';
       }, 1800);
+    }
+
+    function draftTitle(content) {
+      const firstLine = content.split(/\r\n|\r|\n/).map(line => line.trim()).find(Boolean) || '';
+      return firstLine.slice(0, 90) || t('untitled');
+    }
+
+    function draftExcerpt(content) {
+      const normalized = content.replace(/\s+/gu, ' ').trim();
+      if (!normalized) return '';
+      return normalized.length > 180 ? `${normalized.slice(0, 177)}…` : normalized;
+    }
+
+    function formatDraftTime(timestamp) {
+      const locale = currentLanguage === 'ru' ? 'ru-RU' : 'en-US';
+      try {
+        return new Intl.DateTimeFormat(locale, {
+          year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+        }).format(new Date(timestamp));
+      } catch {
+        return new Date(timestamp).toLocaleString();
+      }
+    }
+
+    function renderDrafts() {
+      const drafts = loadDrafts().sort((a, b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0));
+      const activeId = getActiveDraftId();
+      draftList.replaceChildren();
+      draftCount.textContent = t('draftsCount')(drafts.length);
+      deleteAllButton.hidden = drafts.length === 0;
+
+      if (drafts.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'empty-drafts';
+        empty.textContent = t('noDrafts');
+        draftList.appendChild(empty);
+        return;
+      }
+
+      for (const draft of drafts) {
+        const row = document.createElement('article');
+        row.className = `draft-row${draft.id === activeId ? ' active' : ''}`;
+
+        const open = document.createElement('button');
+        open.type = 'button';
+        open.className = 'draft-open';
+        open.addEventListener('click', () => openDraft(draft.id));
+
+        const time = document.createElement('span');
+        time.className = 'draft-time';
+        time.textContent = formatDraftTime(draft.updatedAt || draft.createdAt || Date.now());
+
+        const content = document.createElement('span');
+        content.className = 'draft-content';
+        const title = document.createElement('div');
+        title.className = 'draft-title';
+        title.textContent = draftTitle(draft.content);
+        const excerpt = document.createElement('div');
+        excerpt.className = 'draft-excerpt';
+        excerpt.textContent = draftExcerpt(draft.content);
+        content.append(title, excerpt);
+        open.append(time, content);
+
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'draft-delete danger';
+        remove.textContent = '🗑';
+        remove.title = t('deleteDraftAria');
+        remove.setAttribute('aria-label', t('deleteDraftAria'));
+        remove.addEventListener('click', () => deleteDraft(draft.id));
+
+        row.append(open, remove);
+        draftList.appendChild(row);
+      }
+    }
+
+    function saveForLater() {
+      const content = editor.value;
+      if (!content.trim()) {
+        showStatus(t('nothingToSave'), 'warning');
+        return;
+      }
+
+      const now = Date.now();
+      const activeId = getActiveDraftId();
+      const drafts = loadDrafts();
+      const existingIndex = activeId ? drafts.findIndex(draft => draft.id === activeId) : -1;
+      let message = t('saved');
+
+      if (existingIndex >= 0) {
+        drafts[existingIndex] = { ...drafts[existingIndex], content, updatedAt: now };
+        message = t('updated');
+      } else {
+        drafts.push({ id: makeDraftId(), content, createdAt: now, updatedAt: now });
+      }
+
+      saveDrafts(drafts);
+      editor.value = '';
+      safeStorageRemove(STORAGE.scratch);
+      setActiveDraftId(null);
+      renderStats();
+      renderDrafts();
+      showStatus(message);
+      editor.focus();
+    }
+
+    function startNew() {
+      if (editor.value && !window.confirm(t('newConfirm'))) return;
+      editor.value = '';
+      safeStorageRemove(STORAGE.scratch);
+      setActiveDraftId(null);
+      renderStats();
+      renderDrafts();
+      showStatus(t('newStarted'));
+      editor.focus();
+    }
+
+    function openDraft(id) {
+      const drafts = loadDrafts();
+      const draft = drafts.find(item => item.id === id);
+      if (!draft) return;
+
+      const activeId = getActiveDraftId();
+      if (editor.value && activeId !== id && !window.confirm(t('openReplaceConfirm'))) return;
+
+      editor.value = draft.content;
+      safeStorageSet(STORAGE.scratch, draft.content);
+      setActiveDraftId(id);
+      renderStats();
+      renderDrafts();
+      showStatus(t('opened'));
+      editor.focus();
+    }
+
+    function deleteDraft(id) {
+      if (!window.confirm(t('deleteConfirm'))) return;
+      const drafts = loadDrafts().filter(item => item.id !== id);
+      saveDrafts(drafts);
+      if (getActiveDraftId() === id) setActiveDraftId(null);
+      renderDrafts();
+      showStatus(t('deleted'));
+    }
+
+    function deleteAllDrafts() {
+      const drafts = loadDrafts();
+      if (!drafts.length || !window.confirm(t('deleteAllConfirm'))) return;
+      safeStorageRemove(STORAGE.drafts);
+      setActiveDraftId(null);
+      renderDrafts();
+      showStatus(t('allDeleted'));
     }
 
     async function copyEditor() {
@@ -387,71 +680,6 @@
       }
     }
 
-    function clearEditor() {
-      if (!editor.value || !window.confirm(t('clearConfirm'))) return;
-      editor.value = '';
-      safeStorageRemove(STORAGE.content);
-      updatePreview();
-      editor.focus();
-    }
-
-    function replaceEmojiCodes() {
-      let text = editor.value;
-      let changed = false;
-      for (const [code, emoji] of Object.entries(emojiMap)) {
-        if (text.includes(code)) {
-          text = text.split(code).join(emoji);
-          changed = true;
-        }
-      }
-      if (!changed) {
-        showStatus(t('nothingToConvert'), 'warning');
-        return;
-      }
-      editor.value = text;
-      saveEditor();
-      updatePreview();
-      showStatus(t('converted'));
-    }
-
-    function insertEmoji(emoji) {
-      const start = editor.selectionStart ?? editor.value.length;
-      const end = editor.selectionEnd ?? editor.value.length;
-      editor.setRangeText(emoji, start, end, 'end');
-      editor.focus();
-      saveEditor();
-      updatePreview();
-    }
-
-    function renderEmojiPanel() {
-      emojiGroups.replaceChildren();
-      for (const category of emojiCategories) {
-        const group = document.createElement('section');
-        group.className = 'emoji-group';
-        const title = document.createElement('h3');
-        title.textContent = category.label[currentLanguage];
-        const list = document.createElement('div');
-        list.className = 'emoji-list';
-        for (const emoji of category.emoji) {
-          const button = document.createElement('button');
-          button.type = 'button';
-          button.className = 'emoji-button';
-          button.textContent = emoji;
-          button.setAttribute('aria-label', `${t('insertEmoji')} ${emoji}`);
-          button.addEventListener('click', () => insertEmoji(emoji));
-          list.appendChild(button);
-        }
-        group.append(title, list);
-        emojiGroups.appendChild(group);
-      }
-    }
-
-    function setEmojiPanel(open, persist = true) {
-      emojiPanel.hidden = !open;
-      emojiToggle.setAttribute('aria-expanded', String(open));
-      if (persist) safeStorageSet(STORAGE.emojiOpen, open ? '1' : '0');
-    }
-
     function applyLanguage(language, persist = true) {
       currentLanguage = i18n[language] ? language : 'en';
       document.documentElement.lang = currentLanguage;
@@ -463,13 +691,17 @@
       document.querySelectorAll('[data-i18n-aria-label]').forEach(node => { node.setAttribute('aria-label', t(node.dataset.i18nAriaLabel)); });
       languageButtons.forEach(button => { button.setAttribute('aria-pressed', String(button.dataset.language === currentLanguage)); });
 
-      renderEmojiPanel();
-      updatePreview();
+      renderStats();
+      renderDrafts();
+      updateEditorMode();
       updateThemeButton();
+      autosaveStatus.textContent = t('autosaved');
       if (persist) safeStorageSet(STORAGE.language, currentLanguage);
     }
 
-    function systemPrefersDark() { return window.matchMedia('(prefers-color-scheme: dark)').matches; }
+    function systemPrefersDark() {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
 
     function updateThemeButton() {
       const isDark = document.body.classList.contains('dark');
@@ -485,13 +717,15 @@
       if (persist) safeStorageSet(STORAGE.theme, theme);
     }
 
-    function toggleTheme() { applyTheme(document.body.classList.contains('dark') ? 'light' : 'dark'); }
+    function toggleTheme() {
+      applyTheme(document.body.classList.contains('dark') ? 'light' : 'dark');
+    }
 
-    editor.addEventListener('input', () => { saveEditor(); updatePreview(); });
+    editor.addEventListener('input', autosaveScratch);
+    saveButton.addEventListener('click', saveForLater);
     copyButton.addEventListener('click', copyEditor);
-    clearButton.addEventListener('click', clearEditor);
-    convertButton.addEventListener('click', replaceEmojiCodes);
-    emojiToggle.addEventListener('click', () => setEmojiPanel(emojiPanel.hidden));
+    newButton.addEventListener('click', startNew);
+    deleteAllButton.addEventListener('click', deleteAllDrafts);
     themeToggle.addEventListener('click', toggleTheme);
     languageButtons.forEach(button => button.addEventListener('click', () => applyLanguage(button.dataset.language)));
 
@@ -499,12 +733,15 @@
       if (!safeStorageGet(STORAGE.theme)) applyTheme(systemPrefersDark() ? 'dark' : 'light', false);
     });
 
-    const savedContent = safeStorageGet(STORAGE.content);
-    if (savedContent) editor.value = savedContent;
+    const savedScratch = safeStorageGet(STORAGE.scratch);
+    if (savedScratch) editor.value = savedScratch;
+
     const savedTheme = safeStorageGet(STORAGE.theme);
     applyTheme(savedTheme || (systemPrefersDark() ? 'dark' : 'light'), false);
     applyLanguage(safeStorageGet(STORAGE.language) || 'en', false);
-    setEmojiPanel(safeStorageGet(STORAGE.emojiOpen) === '1', false);
+    renderStats();
+    renderDrafts();
+    updateEditorMode();
   </script>
 </body>
 </html>
