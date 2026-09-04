@@ -1,142 +1,286 @@
-<!DOCTYPE html>
-<html lang="ru">
+<!doctype html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Редактор постов</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="A private, client-side post editor with autosave, emoji tools, and a clean preview for social posts.">
+  <title>Post Editor</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext y='50' font-size='48'%3E%F0%9F%93%9D%3C/text%3E%3C/svg%3E">
   <style>
+    :root {
+      --bg: #f3f6fb;
+      --bg2: #edf5ff;
+      --card: rgba(255,255,255,.9);
+      --card-strong: #fff;
+      --text: #1f2937;
+      --muted: #64748b;
+      --line: rgba(100,116,139,.2);
+      --shadow: 0 14px 38px rgba(15,23,42,.08);
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-text: #fff;
+      --soft: rgba(255,255,255,.42);
+      --success: #15803d;
+      --success-bg: #dcfce7;
+      --warning: #9a6700;
+      --warning-bg: #fff4ce;
+      --focus: rgba(37,99,235,.35);
+    }
+
+    body.dark {
+      --bg: #0f172a;
+      --bg2: #111c34;
+      --card: rgba(15,23,42,.84);
+      --card-strong: #111827;
+      --text: #e5eefb;
+      --muted: #9db0c9;
+      --line: rgba(148,163,184,.18);
+      --shadow: 0 18px 42px rgba(2,6,23,.35);
+      --primary: #60a5fa;
+      --primary-hover: #3b82f6;
+      --primary-text: #07111f;
+      --soft: rgba(255,255,255,.06);
+      --success: #86efac;
+      --success-bg: rgba(34,197,94,.14);
+      --warning: #fde68a;
+      --warning-bg: rgba(234,179,8,.14);
+      --focus: rgba(96,165,250,.38);
+    }
+
+    * { box-sizing: border-box; }
+
     body {
-      font-family: sans-serif;
-      background-color: #f4f4f4;
-      padding: 20px;
-      max-width: 1000px;
-      margin: auto;
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, rgba(59,130,246,.14), transparent 30%),
+        radial-gradient(circle at top right, rgba(16,185,129,.12), transparent 24%),
+        linear-gradient(180deg, var(--bg), var(--bg2));
+      color: var(--text);
+      font: 15px/1.55 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
-    h2 {
-      margin-bottom: 10px;
+
+    .wrapper {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px 16px 40px;
     }
+
+    .hero, .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      padding: 24px;
+      border-radius: 26px;
+      margin-bottom: 18px;
+    }
+
+    .eyebrow, .pill, .status, .stat {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      background: var(--soft);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .eyebrow, .pill { border-radius: 999px; padding: 8px 12px; }
+    .hero h1 { margin: 8px 0 10px; font-size: clamp(30px,5vw,42px); line-height: 1.05; letter-spacing: -.03em; }
+    .hero p { margin: 0; color: var(--muted); max-width: 760px; }
+    .meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+
+    .header-controls { display: flex; gap: 8px; align-items: flex-start; }
+    .language { display: flex; padding: 3px; border: 1px solid var(--line); border-radius: 14px; background: var(--soft); }
+    .language button { min-width: 38px; height: 38px; padding: 0 8px; border: 0; border-radius: 10px; color: var(--muted); font-size: 12px; }
+    .language button[aria-pressed="true"] { background: var(--card-strong); color: var(--text); box-shadow: 0 2px 8px rgba(15,23,42,.09); }
+    .theme { min-width: 46px; height: 46px; padding: 0; border-radius: 14px; }
+
+    .grid { display: grid; grid-template-columns: 1.08fr .92fr; gap: 18px; }
+    .card { padding: 18px; border-radius: 22px; }
+    .head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .head h2 { margin: 0; font-size: 18px; }
+    .sub { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+
     textarea {
       width: 100%;
-      height: 200px;
-      font-size: 16px;
-      font-family: sans-serif;
+      min-height: 310px;
       padding: 15px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--card-strong);
+      color: var(--text);
+      font: 15px/1.65 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       resize: vertical;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-      margin-bottom: 10px;
     }
-    .info {
-      font-size: 14px;
-      color: #666;
-      margin-bottom: 20px;
-    }
+
+    textarea::placeholder { color: var(--muted); }
+    textarea:focus-visible, button:focus-visible { outline: none; box-shadow: 0 0 0 4px var(--focus); border-color: transparent; }
+
     button {
-      padding: 10px 20px;
-      margin-bottom: 10px;
-      margin-right: 10px;
+      appearance: none;
+      border: 1px solid var(--line);
+      background: transparent;
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 14px;
+      font: inherit;
+      font-weight: 650;
       cursor: pointer;
+      transition: background-color .18s ease, color .18s ease;
     }
+
+    button:hover { background: var(--soft); }
+    .primary { background: var(--primary); border-color: transparent; color: var(--primary-text); }
+    .primary:hover { background: var(--primary-hover); }
+
+    .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 14px; }
+    .status { min-height: 40px; padding: 9px 12px; border-radius: 14px; }
+    .status.success { color: var(--success); background: var(--success-bg); }
+    .status.warning { color: var(--warning); background: var(--warning-bg); }
+    .status[hidden] { display: none; }
+
+    .stats { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .stat { padding: 8px 11px; border-radius: 12px; }
+    .stat strong { color: var(--text); }
+
     .preview {
-      background-color: #fff;
+      min-height: 310px;
       padding: 15px;
-      border-radius: 8px;
-      border: 1px solid #ddd;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-      font-size: 15px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--card-strong);
+      color: var(--text);
       white-space: pre-wrap;
-      margin-top: 10px;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+      overflow-wrap: anywhere;
+      font-size: 15px;
+      line-height: 1.65;
     }
-    .label {
-      margin-top: 20px;
-      font-weight: bold;
+
+    .preview.empty { color: var(--muted); }
+
+    .emoji-card { margin-top: 18px; }
+    .emoji-card[hidden] { display: none; }
+    .emoji-groups { display: grid; gap: 14px; }
+    .emoji-group h3 { margin: 0 0 8px; color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+    .emoji-list { display: flex; flex-wrap: wrap; gap: 7px; }
+    .emoji-button { min-width: 42px; min-height: 42px; padding: 6px 9px; font-size: 20px; line-height: 1; border-radius: 12px; background: var(--card-strong); }
+
+    .footer-note { margin-top: 18px; color: var(--muted); font-size: 13px; text-align: center; }
+
+    @media (max-width: 900px) {
+      .hero, .grid { grid-template-columns: 1fr; }
+      .hero { padding: 18px; }
+      .header-controls { justify-content: flex-start; }
     }
-    .emoji-panel {
-      background: #fff;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      padding: 10px;
-      margin-bottom: 15px;
-      font-size: 20px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-    .emoji-panel span {
-      cursor: pointer;
-      padding: 3px 5px;
-    }
-    .emoji-category {
-      width: 100%;
-      margin: 10px 0 5px;
-      font-weight: bold;
-      font-size: 16px;
-    }
-    .toggle-button {
-      background-color: #eee;
-      border: 1px solid #ccc;
-      padding: 5px 10px;
-      font-size: 14px;
-      border-radius: 4px;
-      cursor: pointer;
-      margin-bottom: 10px;
+
+    @media (max-width: 560px) {
+      .wrapper { padding: 14px 12px 28px; }
+      .card, .hero { border-radius: 18px; padding: 14px; }
+      .toolbar button { flex: 1 1 calc(50% - 5px); }
+      textarea, .preview { min-height: 250px; }
     }
   </style>
 </head>
 <body>
-  <h2>📝 Редактор постов для Discord и Twitter</h2>
-  <p>Редактируй пост с эмодзи, текстом и ссылками. Всё сохраняется автоматически в браузере.</p>
+  <div class="wrapper">
+    <section class="hero">
+      <div>
+        <span class="eyebrow" data-i18n="eyebrow">🔒 Saved locally • nothing leaves your browser</span>
+        <h1 data-i18n="heading">Post Editor</h1>
+        <p data-i18n="intro">Draft social posts, insert emoji, convert common emoji shortcodes, and preview the result in one small local tool.</p>
+        <div class="meta">
+          <span class="pill" data-i18n="pillAutosave">💾 Local autosave</span>
+          <span class="pill" data-i18n="pillEmoji">🙂 Emoji tools</span>
+          <span class="pill" data-i18n="pillPreview">👁 Live preview</span>
+        </div>
+      </div>
+      <div class="header-controls">
+        <div class="language" role="group" aria-label="Language" data-i18n-aria-label="languageLabel">
+          <button type="button" data-language="en" aria-pressed="true">EN</button>
+          <button type="button" data-language="ru" aria-pressed="false">RU</button>
+        </div>
+        <button id="themeToggle" class="theme" type="button" aria-label="Switch theme" title="Switch theme">🌓</button>
+      </div>
+    </section>
 
-  <button class="toggle-button" onclick="toggleEmojiPanel()">🙂 Показать / скрыть панель эмодзи</button>
+    <div class="grid">
+      <section class="card">
+        <div class="head">
+          <div>
+            <h2 data-i18n="editorHeading">Editor</h2>
+            <p class="sub" data-i18n="editorSub">Write or paste your post</p>
+          </div>
+        </div>
 
-  <div class="emoji-panel" id="emojiPanel">
-    <div class="emoji-category">🔥 Популярные:</div>
-    <span onclick="insertEmoji('🔥')">🔥</span>
-    <span onclick="insertEmoji('🚀')">🚀</span>
-    <span onclick="insertEmoji('✅')">✅</span>
-    <span onclick="insertEmoji('🎉')">🎉</span>
-    <span onclick="insertEmoji('💰')">💰</span>
-    <span onclick="insertEmoji('📈')">📈</span>
-    <div class="emoji-category">😂 Смешные:</div>
-    <span onclick="insertEmoji('😄')">😄</span>
-    <span onclick="insertEmoji('😎')">😎</span>
-    <span onclick="insertEmoji('🤔')">🤔</span>
-    <span onclick="insertEmoji('👀')">👀</span>
-    <span onclick="insertEmoji('👋')">👋</span>
-    <div class="emoji-category">🧠 DeFi & Web3:</div>
-    <span onclick="insertEmoji('⚡')">⚡</span>
-    <span onclick="insertEmoji('🔐')">🔐</span>
-    <span onclick="insertEmoji('🔗')">🔗</span>
-    <span onclick="insertEmoji('📛')">📛</span>
-    <div class="emoji-category">🐾 Животные:</div>
-    <span onclick="insertEmoji('🐶')">🐶</span>
-    <span onclick="insertEmoji('🐱')">🐱</span>
-    <span onclick="insertEmoji('🦊')">🦊</span>
-    <span onclick="insertEmoji('🐢')">🐢</span>
-    <span onclick="insertEmoji('🐳')">🐳</span>
-    <div class="emoji-category">🌍 Флаги:</div>
-    <span onclick="insertEmoji('🇷🇺')">🇷🇺</span>
-    <span onclick="insertEmoji('🇺🇸')">🇺🇸</span>
-    <span onclick="insertEmoji('🇪🇺')">🇪🇺</span>
-    <span onclick="insertEmoji('🇨🇳')">🇨🇳</span>
-    <span onclick="insertEmoji('🇯🇵')">🇯🇵</span>
+        <textarea id="editor" placeholder="Write your post here..." data-i18n-placeholder="editorPlaceholder" aria-label="Post editor" data-i18n-aria-label="editorAria"></textarea>
+
+        <div id="stats" class="stats" aria-live="polite"></div>
+
+        <div class="toolbar">
+          <button id="copyButton" class="primary" type="button" data-i18n="copy">📋 Copy post</button>
+          <button id="clearButton" type="button" data-i18n="clear">🧹 Clear</button>
+          <button id="emojiToggle" type="button" aria-expanded="false" data-i18n="emojiToggle">🙂 Emoji</button>
+          <button id="convertButton" type="button" data-i18n="convert">🔁 Convert :emoji:</button>
+          <span id="actionStatus" class="status success" role="status" aria-live="polite" hidden></span>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="head">
+          <div>
+            <h2 data-i18n="previewHeading">Preview</h2>
+            <p class="sub" data-i18n="previewSub">Plain-text preview of the final post</p>
+          </div>
+        </div>
+        <div id="preview" class="preview empty" aria-live="polite"></div>
+      </section>
+    </div>
+
+    <section id="emojiPanel" class="card emoji-card" hidden>
+      <div class="head">
+        <div>
+          <h2 data-i18n="emojiHeading">Emoji palette</h2>
+          <p class="sub" data-i18n="emojiSub">Inserted at the current cursor position</p>
+        </div>
+      </div>
+      <div id="emojiGroups" class="emoji-groups"></div>
+    </section>
+
+    <p class="footer-note" data-i18n="footer">All content is stored only in this browser using localStorage.</p>
   </div>
-
-  <textarea id="editor" placeholder="Напиши пост здесь..."></textarea>
-  <div class="info">Автосохранение включено. Данные хранятся только в вашем браузере.</div>
-  <button onclick="copyEditor()">📋 Скопировать</button>
-  <button onclick="clearEditor()">🧹 Очистить</button>
-  <button onclick="replaceEmojiCodes()">🔁 Преобразовать :emoji: → 😊</button>
-
-  <div class="label">Предпросмотр:</div>
-  <div class="preview" id="preview"></div>
 
   <script>
     const editor = document.getElementById('editor');
     const preview = document.getElementById('preview');
+    const stats = document.getElementById('stats');
     const emojiPanel = document.getElementById('emojiPanel');
-    const editorKey = 'postEditorContent';
+    const emojiGroups = document.getElementById('emojiGroups');
+    const emojiToggle = document.getElementById('emojiToggle');
+    const copyButton = document.getElementById('copyButton');
+    const clearButton = document.getElementById('clearButton');
+    const convertButton = document.getElementById('convertButton');
+    const actionStatus = document.getElementById('actionStatus');
+    const themeToggle = document.getElementById('themeToggle');
+    const languageButtons = [...document.querySelectorAll('[data-language]')];
+    const descriptionMeta = document.querySelector('meta[name="description"]');
+
+    const STORAGE = {
+      content: 'postEditorContent',
+      language: 'postEditorLanguage',
+      theme: 'postEditorTheme',
+      emojiOpen: 'postEditorEmojiOpen'
+    };
 
     const emojiMap = {
       ':bell:': '🔔', ':name_badge:': '📛', ':link:': '🔗', ':closed_lock_with_key:': '🔐',
@@ -146,62 +290,221 @@
       ':smile:': '😄', ':wave:': '👋'
     };
 
+    const emojiCategories = [
+      { label: { en: 'Popular', ru: 'Популярные' }, emoji: ['🔥','🚀','✅','🎉','💰','📈','⭐','⚠️'] },
+      { label: { en: 'Reactions', ru: 'Реакции' }, emoji: ['😄','😎','🤔','👀','👋','😂','❤️','👍'] },
+      { label: { en: 'Web3 & Tech', ru: 'Web3 и технологии' }, emoji: ['⚡','🔐','🔗','📛','🧠','💻','🛡️','🔔'] },
+      { label: { en: 'Animals', ru: 'Животные' }, emoji: ['🐶','🐱','🦊','🐢','🐳','🐸','🐻','🦁'] },
+      { label: { en: 'Flags', ru: 'Флаги' }, emoji: ['🇷🇺','🇺🇸','🇪🇺','🇬🇧','🇩🇪','🇫🇷','🇯🇵','🇨🇳','🇺🇦'] }
+    ];
+
+    const i18n = {
+      en: {
+        pageTitle: 'Post Editor',
+        metaDescription: 'A private, client-side post editor with autosave, emoji tools, and a clean preview for social posts.',
+        eyebrow: '🔒 Saved locally • nothing leaves your browser', heading: 'Post Editor',
+        intro: 'Draft social posts, insert emoji, convert common emoji shortcodes, and preview the result in one small local tool.',
+        pillAutosave: '💾 Local autosave', pillEmoji: '🙂 Emoji tools', pillPreview: '👁 Live preview',
+        languageLabel: 'Language', editorHeading: 'Editor', editorSub: 'Write or paste your post',
+        editorPlaceholder: 'Write your post here...', editorAria: 'Post editor', copy: '📋 Copy post', clear: '🧹 Clear',
+        emojiToggle: '🙂 Emoji', convert: '🔁 Convert :emoji:', previewHeading: 'Preview', previewSub: 'Plain-text preview of the final post',
+        emojiHeading: 'Emoji palette', emojiSub: 'Inserted at the current cursor position', footer: 'All content is stored only in this browser using localStorage.',
+        emptyPreview: 'Your post preview will appear here.', chars: 'Characters', words: 'Words', lines: 'Lines',
+        copied: 'Copied', converted: 'Emoji shortcodes converted', nothingToConvert: 'No known emoji shortcodes found',
+        clearConfirm: 'Clear the saved post?', themeDark: 'Switch to dark theme', themeLight: 'Switch to light theme', insertEmoji: 'Insert'
+      },
+      ru: {
+        pageTitle: 'Редактор постов',
+        metaDescription: 'Локальный редактор постов с автосохранением, эмодзи и предпросмотром прямо в браузере.',
+        eyebrow: '🔒 Сохраняется локально • текст никуда не отправляется', heading: 'Редактор постов',
+        intro: 'Готовьте посты, вставляйте эмодзи, преобразовывайте популярные :emoji:-коды и сразу смотрите результат.',
+        pillAutosave: '💾 Локальное автосохранение', pillEmoji: '🙂 Эмодзи', pillPreview: '👁 Предпросмотр',
+        languageLabel: 'Язык', editorHeading: 'Редактор', editorSub: 'Напишите или вставьте пост',
+        editorPlaceholder: 'Напишите пост здесь...', editorAria: 'Редактор поста', copy: '📋 Скопировать', clear: '🧹 Очистить',
+        emojiToggle: '🙂 Эмодзи', convert: '🔁 Преобразовать :emoji:', previewHeading: 'Предпросмотр', previewSub: 'Текстовый предпросмотр итогового поста',
+        emojiHeading: 'Панель эмодзи', emojiSub: 'Эмодзи вставится в текущую позицию курсора', footer: 'Весь текст хранится только в этом браузере через localStorage.',
+        emptyPreview: 'Здесь появится предпросмотр поста.', chars: 'Символы', words: 'Слова', lines: 'Строки',
+        copied: 'Скопировано', converted: 'Emoji-коды преобразованы', nothingToConvert: 'Знакомых emoji-кодов не найдено',
+        clearConfirm: 'Очистить сохранённый пост?', themeDark: 'Включить тёмную тему', themeLight: 'Включить светлую тему', insertEmoji: 'Вставить'
+      }
+    };
+
+    let currentLanguage = 'en';
+
+    function t(key) { return i18n[currentLanguage][key] || i18n.en[key] || key; }
+    function safeStorageGet(key) { try { return localStorage.getItem(key); } catch { return null; } }
+    function safeStorageSet(key, value) { try { localStorage.setItem(key, value); } catch {} }
+    function safeStorageRemove(key) { try { localStorage.removeItem(key); } catch {} }
+
+    function renderStats() {
+      const text = editor.value;
+      const characters = Array.from(text).length;
+      const words = text.trim() ? text.trim().split(/\s+/u).length : 0;
+      const lines = text ? text.split(/\r\n|\r|\n/).length : 0;
+      const items = [[t('chars'), characters], [t('words'), words], [t('lines'), lines]];
+      stats.replaceChildren();
+      for (const [label, value] of items) {
+        const item = document.createElement('span');
+        item.className = 'stat';
+        const strong = document.createElement('strong');
+        strong.textContent = String(value);
+        item.append(document.createTextNode(`${label}: `), strong);
+        stats.appendChild(item);
+      }
+    }
+
     function updatePreview() {
-      preview.textContent = editor.value;
+      const text = editor.value;
+      preview.textContent = text || t('emptyPreview');
+      preview.classList.toggle('empty', !text);
+      renderStats();
+    }
+
+    function saveEditor() { safeStorageSet(STORAGE.content, editor.value); }
+
+    function showStatus(message, kind = 'success') {
+      actionStatus.hidden = false;
+      actionStatus.className = `status ${kind}`;
+      actionStatus.textContent = message;
+      window.setTimeout(() => {
+        if (actionStatus.textContent === message) {
+          actionStatus.hidden = true;
+          actionStatus.textContent = '';
+        }
+      }, 1800);
+    }
+
+    async function copyEditor() {
+      if (!editor.value) return;
+      try {
+        await navigator.clipboard.writeText(editor.value);
+        showStatus(t('copied'));
+      } catch {
+        editor.focus();
+        editor.select();
+        const copied = document.execCommand('copy');
+        if (copied) showStatus(t('copied'));
+      }
+    }
+
+    function clearEditor() {
+      if (!editor.value || !window.confirm(t('clearConfirm'))) return;
+      editor.value = '';
+      safeStorageRemove(STORAGE.content);
+      updatePreview();
+      editor.focus();
     }
 
     function replaceEmojiCodes() {
       let text = editor.value;
-      for (const code in emojiMap) {
-        const regex = new RegExp(code.replace(/([.*+?^=!:${}()|[\]\\])/g, "\\$1"), 'g');
-        text = text.replace(regex, emojiMap[code]);
+      let changed = false;
+      for (const [code, emoji] of Object.entries(emojiMap)) {
+        if (text.includes(code)) {
+          text = text.split(code).join(emoji);
+          changed = true;
+        }
+      }
+      if (!changed) {
+        showStatus(t('nothingToConvert'), 'warning');
+        return;
       }
       editor.value = text;
-      localStorage.setItem(editorKey, text);
+      saveEditor();
       updatePreview();
+      showStatus(t('converted'));
     }
 
     function insertEmoji(emoji) {
-      const start = editor.selectionStart;
-      const end = editor.selectionEnd;
-      const text = editor.value;
-      editor.value = text.slice(0, start) + emoji + text.slice(end);
+      const start = editor.selectionStart ?? editor.value.length;
+      const end = editor.selectionEnd ?? editor.value.length;
+      editor.setRangeText(emoji, start, end, 'end');
       editor.focus();
-      editor.selectionStart = editor.selectionEnd = start + emoji.length;
-      localStorage.setItem(editorKey, editor.value);
+      saveEditor();
       updatePreview();
     }
 
-    function toggleEmojiPanel() {
-      emojiPanel.style.display = emojiPanel.style.display === 'none' ? 'flex' : 'none';
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      const saved = localStorage.getItem(editorKey);
-      if (saved) {
-        editor.value = saved;
-      }
-      updatePreview();
-    });
-
-    editor.addEventListener('input', () => {
-      localStorage.setItem(editorKey, editor.value);
-      updatePreview();
-    });
-
-    function copyEditor() {
-      editor.select();
-      document.execCommand('copy');
-      alert('Пост скопирован!');
-    }
-
-    function clearEditor() {
-      if (confirm('Очистить текст?')) {
-        editor.value = '';
-        localStorage.removeItem(editorKey);
-        updatePreview();
+    function renderEmojiPanel() {
+      emojiGroups.replaceChildren();
+      for (const category of emojiCategories) {
+        const group = document.createElement('section');
+        group.className = 'emoji-group';
+        const title = document.createElement('h3');
+        title.textContent = category.label[currentLanguage];
+        const list = document.createElement('div');
+        list.className = 'emoji-list';
+        for (const emoji of category.emoji) {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'emoji-button';
+          button.textContent = emoji;
+          button.setAttribute('aria-label', `${t('insertEmoji')} ${emoji}`);
+          button.addEventListener('click', () => insertEmoji(emoji));
+          list.appendChild(button);
+        }
+        group.append(title, list);
+        emojiGroups.appendChild(group);
       }
     }
+
+    function setEmojiPanel(open, persist = true) {
+      emojiPanel.hidden = !open;
+      emojiToggle.setAttribute('aria-expanded', String(open));
+      if (persist) safeStorageSet(STORAGE.emojiOpen, open ? '1' : '0');
+    }
+
+    function applyLanguage(language, persist = true) {
+      currentLanguage = i18n[language] ? language : 'en';
+      document.documentElement.lang = currentLanguage;
+      document.title = t('pageTitle');
+      descriptionMeta.content = t('metaDescription');
+
+      document.querySelectorAll('[data-i18n]').forEach(node => { node.textContent = t(node.dataset.i18n); });
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(node => { node.placeholder = t(node.dataset.i18nPlaceholder); });
+      document.querySelectorAll('[data-i18n-aria-label]').forEach(node => { node.setAttribute('aria-label', t(node.dataset.i18nAriaLabel)); });
+      languageButtons.forEach(button => { button.setAttribute('aria-pressed', String(button.dataset.language === currentLanguage)); });
+
+      renderEmojiPanel();
+      updatePreview();
+      updateThemeButton();
+      if (persist) safeStorageSet(STORAGE.language, currentLanguage);
+    }
+
+    function systemPrefersDark() { return window.matchMedia('(prefers-color-scheme: dark)').matches; }
+
+    function updateThemeButton() {
+      const isDark = document.body.classList.contains('dark');
+      themeToggle.textContent = isDark ? '☀️' : '🌙';
+      const label = isDark ? t('themeLight') : t('themeDark');
+      themeToggle.title = label;
+      themeToggle.setAttribute('aria-label', label);
+    }
+
+    function applyTheme(theme, persist = true) {
+      document.body.classList.toggle('dark', theme === 'dark');
+      updateThemeButton();
+      if (persist) safeStorageSet(STORAGE.theme, theme);
+    }
+
+    function toggleTheme() { applyTheme(document.body.classList.contains('dark') ? 'light' : 'dark'); }
+
+    editor.addEventListener('input', () => { saveEditor(); updatePreview(); });
+    copyButton.addEventListener('click', copyEditor);
+    clearButton.addEventListener('click', clearEditor);
+    convertButton.addEventListener('click', replaceEmojiCodes);
+    emojiToggle.addEventListener('click', () => setEmojiPanel(emojiPanel.hidden));
+    themeToggle.addEventListener('click', toggleTheme);
+    languageButtons.forEach(button => button.addEventListener('click', () => applyLanguage(button.dataset.language)));
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => {
+      if (!safeStorageGet(STORAGE.theme)) applyTheme(systemPrefersDark() ? 'dark' : 'light', false);
+    });
+
+    const savedContent = safeStorageGet(STORAGE.content);
+    if (savedContent) editor.value = savedContent;
+    const savedTheme = safeStorageGet(STORAGE.theme);
+    applyTheme(savedTheme || (systemPrefersDark() ? 'dark' : 'light'), false);
+    applyLanguage(safeStorageGet(STORAGE.language) || 'en', false);
+    setEmojiPanel(safeStorageGet(STORAGE.emojiOpen) === '1', false);
   </script>
 </body>
 </html>
