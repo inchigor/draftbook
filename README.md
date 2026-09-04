@@ -2,6 +2,8 @@
 
 A small, dependency-free, client-side editor for drafting social posts with local autosave, emoji tools, and a live preview.
 
+**[Live Demo](https://inchigor.github.io/post-editor/)**
+
 ## Features
 
 - Local autosave with `localStorage`

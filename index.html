@@ -295,7 +295,7 @@
       { label: { en: 'Reactions', ru: 'Реакции' }, emoji: ['😄','😎','🤔','👀','👋','😂','❤️','👍'] },
       { label: { en: 'Web3 & Tech', ru: 'Web3 и технологии' }, emoji: ['⚡','🔐','🔗','📛','🧠','💻','🛡️','🔔'] },
       { label: { en: 'Animals', ru: 'Животные' }, emoji: ['🐶','🐱','🦊','🐢','🐳','🐸','🐻','🦁'] },
-      { label: { en: 'Flags', ru: 'Флаги' }, emoji: ['🇺🇸','🇪🇺','🇬🇧','🇩🇪','🇫🇷','🇯🇵','🇨🇳','🇺🇦'] }
+      { label: { en: 'Flags', ru: 'Флаги' }, emoji: ['🇷🇺','🇺🇸','🇪🇺','🇬🇧','🇩🇪','🇫🇷','🇯🇵','🇨🇳','🇺🇦'] }
     ];
 
     const i18n = {
@@ -311,7 +311,7 @@
         emojiHeading: 'Emoji palette', emojiSub: 'Inserted at the current cursor position', footer: 'All content is stored only in this browser using localStorage.',
         emptyPreview: 'Your post preview will appear here.', chars: 'Characters', words: 'Words', lines: 'Lines',
         copied: 'Copied', converted: 'Emoji shortcodes converted', nothingToConvert: 'No known emoji shortcodes found',
-        clearConfirm: 'Clear the saved post?', themeDark: 'Switch to dark theme', themeLight: 'Switch to light theme'
+        clearConfirm: 'Clear the saved post?', themeDark: 'Switch to dark theme', themeLight: 'Switch to light theme', insertEmoji: 'Insert'
       },
       ru: {
         pageTitle: 'Редактор постов',
@@ -325,7 +325,7 @@
         emojiHeading: 'Панель эмодзи', emojiSub: 'Эмодзи вставится в текущую позицию курсора', footer: 'Весь текст хранится только в этом браузере через localStorage.',
         emptyPreview: 'Здесь появится предпросмотр поста.', chars: 'Символы', words: 'Слова', lines: 'Строки',
         copied: 'Скопировано', converted: 'Emoji-коды преобразованы', nothingToConvert: 'Знакомых emoji-кодов не найдено',
-        clearConfirm: 'Очистить сохранённый пост?', themeDark: 'Включить тёмную тему', themeLight: 'Включить светлую тему'
+        clearConfirm: 'Очистить сохранённый пост?', themeDark: 'Включить тёмную тему', themeLight: 'Включить светлую тему', insertEmoji: 'Вставить'
       }
     };
 
@@ -437,7 +437,7 @@
           button.type = 'button';
           button.className = 'emoji-button';
           button.textContent = emoji;
-          button.setAttribute('aria-label', `Insert ${emoji}`);
+          button.setAttribute('aria-label', `${t('insertEmoji')} ${emoji}`);
           button.addEventListener('click', () => insertEmoji(emoji));
           list.appendChild(button);
         }
