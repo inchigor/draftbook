@@ -1,6 +1,6 @@
 # Draftbook 📝
 
-A small, dependency-free, local-first notebook for writing and saving selected drafts in your browser.
+A small, dependency-free, local-first app for writing and saving selected drafts in your browser.
 
 **[Live Demo](https://inchigor.github.io/draftbook/)**
 
