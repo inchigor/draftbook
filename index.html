@@ -354,6 +354,7 @@
         saved: 'Saved for later',
         updated: 'Draft updated',
         newStarted: 'New blank note',
+        newConfirm: 'Start a new note? Your current unsaved text will be discarded.',
         nothingToSave: 'Nothing to save',
         opened: 'Draft opened',
         deleted: 'Draft deleted',
@@ -400,6 +401,7 @@
         saved: 'Сохранено на потом',
         updated: 'Черновик обновлён',
         newStarted: 'Открыт новый пустой лист',
+        newConfirm: 'Открыть новый лист? Текущий несохранённый текст будет удалён.',
         nothingToSave: 'Нечего сохранять',
         opened: 'Черновик открыт',
         deleted: 'Черновик удалён',
@@ -620,6 +622,7 @@
     }
 
     function startNew() {
+      if (editor.value && !window.confirm(t('newConfirm'))) return;
       editor.value = '';
       safeStorageRemove(STORAGE.scratch);
       setActiveDraftId(null);
